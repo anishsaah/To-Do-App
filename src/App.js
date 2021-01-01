@@ -4,25 +4,65 @@ import { Grid,Button,List,ListItem,ListItemAvatar,ListItemText,ListItemSecondary
 import BurstModeIcon from '@material-ui/icons/BurstMode';
 import DeleteIcon from '@material-ui/icons/Delete';
 import moment from 'moment';
+import firebase from 'firebase';
 
 export default class App extends Component {
   state={
     todovalue:"",
     finalvalue:"",
-    updatetime:""
+    updatetime:"",
+    firebasedata:[],
   }
   onChange=(event)=>{
     this.setState({todovalue:event.target.value})    
     // console.log(this.state.todovalue)
   }
   onSubmit=()=>{
-    this.setState({
+    // this.setState({
+    //   finalvalue:this.state.todovalue,
+    //   updatetime:moment().format('MMMM Do YYYY, h:mm:ss a'),  
+    // })
+    const firestore=firebase.firestore();
+
+    firestore.collection("todoapp").add({
       finalvalue:this.state.todovalue,
-      updatetime:moment().format('MMMM Do YYYY, h:mm:ss a'),  
+      updatetime:moment().format('MMMM Do YYYY, h:mm:ss a'),
     })
+    .then(()=>{
+      //console.log("Todoadded");
+      window.location.reload()
+    })
+
+  }
+
+  componentDidMount=()=>{
+    this.getvalue()
+  }
+
+
+  getvalue = async()=>{
+    const firestore=firebase.firestore();
+    const recievevalue = await firestore.collection("todoapp").orderBy("updatetime","desc").get();
+    this.setState({firebasedata:recievevalue.docs})
+    // console.log(recievevalue.docs)
   }
 
   render() {
+    
+  var firebaseConfig = {
+    apiKey: "AIzaSyD41jBNFBrhOTCWAzSGy6TVd6arfQ-h284",
+    authDomain: "to-do-app-42382.firebaseapp.com",
+    projectId: "to-do-app-42382",
+    storageBucket: "to-do-app-42382.appspot.com",
+    messagingSenderId: "1096233199629",
+    appId: "1:1096233199629:web:be5c20503a2c5c33e10d44",
+    measurementId: "G-SDC22HD6JP"
+  };
+  // Initialize Firebase
+  if(!firebase.apps.length){ 
+  firebase.initializeApp(firebaseConfig);
+  }
+
     return (
       <div align="center">
         <h1>To Do App <text style={{color:'lightgray',fontSize:10}}>By Anish Dai</text></h1>
@@ -41,6 +81,8 @@ export default class App extends Component {
           <div style={{marginLeft:"36%"}}>
             <Grid container>
             <List>
+              {
+               this.state.firebasedata.map((val)=> 
               <ListItem>
                 <ListItemAvatar>
                   <Avatar>
@@ -48,16 +90,16 @@ export default class App extends Component {
                   </Avatar>
                 </ListItemAvatar>
                 <ListItemText
-                  primary={this.state.finalvalue} secondary={this.state.updatetime}/>
+                  primary={val.data().finalvalue} secondary={val.data().updatetime}/>
                 <div style={{paddingLeft:50}}>
-                <ListItemSecondaryAction>
+                {/* <ListItemSecondaryAction>
                   <IconButton edge="end" aria-label="delete">
                     <DeleteIcon />
                   </IconButton>
-                </ListItemSecondaryAction>
+                </ListItemSecondaryAction> */}
                 </div>
-              </ListItem>
-              
+              </ListItem>)
+              }
               </List>
             </Grid>
           </div>  
